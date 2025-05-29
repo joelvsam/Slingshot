@@ -17,7 +17,7 @@ const render = Render.create({
     width: window.innerWidth,
     height: window.innerHeight,
     wireframes: false,
-    background: '#ccf',
+    background: '#000',  // black background here too
     pixelRatio: window.devicePixelRatio
   }
 });
@@ -199,7 +199,7 @@ Events.on(render, 'afterRender', () => {
     ctx.beginPath();
     ctx.moveTo(posA.x, posA.y);
     ctx.lineTo(posB.x, posB.y);
-    ctx.strokeStyle = '#000';
+    ctx.strokeStyle = '#fff';  // white sling string
     ctx.lineWidth = 5;
     ctx.stroke();
   }

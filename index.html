@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Slingshot Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <button id="replayBtn" title="Replay (Reset)">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 5V2L8 6l4 4V7c3.31 0 6 2.69 6 6 0 2.21-1.2 4.15-3 5.19v2.03c2.89-1.21 5-4.16 5-7.22 0-4.42-3.58-8-8-8z"/>
+      <path d="M6.41 6.41L5 7.83l3.59 3.59L12 9.41V13h2V7h-6v2h1.59z" opacity=".3"/>
+    </svg>
+  </button>
+  <div id="gameOverOverlay">Game Over!</div>
+  <canvas id="game"></canvas>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -7,7 +7,7 @@ const engine = Engine.create();
 const { world } = engine;
 
 const canvas = document.getElementById('game');
-const gameOverOverlay = document.getElementById('gameOverOverlay');
+const messageOverlay = document.getElementById('messageOverlay');
 const replayBtn = document.getElementById('replayBtn');
 
 const render = Render.create({
@@ -17,7 +17,7 @@ const render = Render.create({
     width: window.innerWidth,
     height: window.innerHeight,
     wireframes: false,
-    background: '#000',  // black background here too
+    background: 'black',
     pixelRatio: window.devicePixelRatio
   }
 });
@@ -32,7 +32,40 @@ let sling;
 let ball;
 let ground;
 let walls = [];
-let isGameOver = false;
+let isLevelComplete = false;
+
+let currentLevel = 1;
+
+const levels = {
+  1: {
+    createBlocks: () => {
+      const newBlocks = [];
+      const cols = 2, rows = 2;
+      const startX = window.innerWidth * 0.7;
+      const startY = window.innerHeight - 100;
+      for(let y = 0; y < rows; y++) {
+        for(let x = 0; x < cols; x++) {
+          newBlocks.push(createBlock(startX + x * 40, startY - y * 40));
+        }
+      }
+      return newBlocks;
+    }
+  },
+  2: {
+    createBlocks: () => {
+      const newBlocks = [];
+      const cols = 3, rows = 3;
+      const startX = window.innerWidth * 0.7;
+      const startY = window.innerHeight - 100;
+      for(let y = 0; y < rows; y++) {
+        for(let x = 0; x < cols; x++) {
+          newBlocks.push(createBlock(startX + x * 40, startY - y * 40));
+        }
+      }
+      return newBlocks;
+    }
+  }
+};
 
 function getSlingAnchor() {
   return { x: window.innerWidth * 0.25, y: window.innerHeight * 0.6 };
@@ -56,11 +89,9 @@ function createWalls() {
     walls = [];
   }
   const thickness = 60;
-  const left = Bodies.rectangle(-thickness / 2, window.innerHeight / 2, thickness, window.innerHeight, { isStatic: true, render: { visible: false } });
-  const right = Bodies.rectangle(window.innerWidth + thickness / 2, window.innerHeight / 2, thickness, window.innerHeight, { isStatic: true, render: { visible: false } });
-  const top = Bodies.rectangle(window.innerWidth / 2, -thickness / 2, window.innerWidth, thickness, { isStatic: true, render: { visible: false } });
-
-  walls = [left, right, top];
+  const left = Bodies.rectangle(-thickness/2, window.innerHeight/2, thickness, window.innerHeight, { isStatic: true, render: { visible: false } });
+  const right = Bodies.rectangle(window.innerWidth+thickness/2, window.innerHeight/2, thickness, window.innerHeight, { isStatic: true, render: { visible: false } });
+  walls = [left, right];
   World.add(world, walls);
 }
 
@@ -78,21 +109,12 @@ function createBlock(x, y) {
   return block;
 }
 
-function createBlocks() {
+function createBlocksForCurrentLevel() {
   if (blocks.length) {
     World.remove(world, blocks);
     blocks = [];
   }
-  const cols = 5;
-  const rows = 4;
-  const startX = window.innerWidth * 0.7;
-  const startY = window.innerHeight - 100;
-
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
-      blocks.push(createBlock(startX + x * 40, startY - y * 40));
-    }
-  }
+  blocks = levels[currentLevel].createBlocks();
   World.add(world, blocks);
 }
 
@@ -122,12 +144,28 @@ function createSling(ballBody) {
   World.add(world, sling);
 }
 
+function showMessage(msg) {
+  messageOverlay.textContent = msg;
+  messageOverlay.classList.add('visible');
+}
+
+function hideMessage() {
+  messageOverlay.classList.remove('visible');
+  messageOverlay.removeEventListener('click', restartGame);
+}
+
+function restartGame() {
+  currentLevel = 1;
+  setup();
+  hideMessage();
+}
+
 function setup() {
-  isGameOver = false;
-  gameOverOverlay.classList.remove('visible');
+  isLevelComplete = false;
+  hideMessage();
   createGround();
   createWalls();
-  createBlocks();
+  createBlocksForCurrentLevel();
   balls.forEach(b => World.remove(world, b));
   balls = [];
   ball = createBall();
@@ -156,7 +194,7 @@ Events.on(mouseConstraint, "enddrag", (event) => {
 });
 
 document.addEventListener("keydown", (e) => {
-  if (e.code === "Space" && !isGameOver) {
+  if (e.code === "Space" && !isLevelComplete) {
     ball = createBall();
     createSling(ball);
   }
@@ -181,11 +219,21 @@ Events.on(render, 'beforeRender', () => {
     block.render.fillStyle = block.isHit ? '#f90' : '#b22';
   });
 
-  if (!isGameOver) {
+  if (!isLevelComplete) {
     const allHit = blocks.every(block => block.isHit);
     if (allHit) {
-      isGameOver = true;
-      gameOverOverlay.classList.add('visible');
+      isLevelComplete = true;
+      showMessage(`Level ${currentLevel} Complete!`);
+      setTimeout(() => {
+        messageOverlay.classList.remove('visible');
+        currentLevel++;
+        if (!levels[currentLevel]) {
+          showMessage('You Won! 🎉 Click to Restart');
+          messageOverlay.addEventListener('click', restartGame, { once: true });
+        } else {
+          setup();
+        }
+      }, 2000);
     }
   }
 });
@@ -199,7 +247,7 @@ Events.on(render, 'afterRender', () => {
     ctx.beginPath();
     ctx.moveTo(posA.x, posA.y);
     ctx.lineTo(posB.x, posB.y);
-    ctx.strokeStyle = '#fff';  // white sling string
+    ctx.strokeStyle = '#fff';
     ctx.lineWidth = 5;
     ctx.stroke();
   }
@@ -218,15 +266,12 @@ window.addEventListener('resize', () => {
   render.canvas.height = window.innerHeight * window.devicePixelRatio;
   render.canvas.style.width = window.innerWidth + 'px';
   render.canvas.style.height = window.innerHeight + 'px';
-
   createGround();
   createWalls();
-  createBlocks();
-
-  if (ball && sling) {
-    sling.pointA = getSlingAnchor();
-    if (!sling.bodyB) {
-      createSling(ball);
-    }
+  createBlocksForCurrentLevel();
+  if (ball) {
+    World.remove(world, ball);
   }
+  ball = createBall();
+  createSling(ball);
 });

@@ -68,7 +68,7 @@ const levels = {
 };
 
 function getSlingAnchor() {
-  return { x: window.innerWidth * 0.25, y: window.innerHeight * 0.6 };
+  return { x: window.innerWidth * 0.25, y: window.innerHeight * 0.4 };
 }
 
 function createGround() {
@@ -120,7 +120,7 @@ function createBlocksForCurrentLevel() {
 
 function createBall() {
   const anchor = getSlingAnchor();
-  const b = Bodies.circle(anchor.x, anchor.y, 20, {
+  const b = Bodies.circle(anchor.x, anchor.y + 40, 20, {
     density: 0.004,
     restitution: 0.6,
     friction: 0.01,
@@ -228,7 +228,7 @@ Events.on(render, 'beforeRender', () => {
         messageOverlay.classList.remove('visible');
         currentLevel++;
         if (!levels[currentLevel]) {
-          showMessage('You Won! 🎉 Click to Restart');
+          showMessage('You Won! Click Anywhere to Restart');
           messageOverlay.addEventListener('click', restartGame, { once: true });
         } else {
           setup();

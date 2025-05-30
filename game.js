@@ -120,7 +120,7 @@ function createBlocksForCurrentLevel() {
 
 function createBall() {
   const anchor = getSlingAnchor();
-  const b = Bodies.circle(anchor.x, anchor.y + 40, 20, {
+  const b = Bodies.circle(anchor.x, anchor.y, 20, {
     density: 0.004,
     restitution: 0.6,
     friction: 0.01,
@@ -185,6 +185,22 @@ const mouseConstraint = MouseConstraint.create(engine, {
 World.add(world, mouseConstraint);
 render.mouse = mouse;
 
+// TOUCH SUPPORT
+render.canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  Mouse.setPosition(mouse, { x: touch.clientX, y: touch.clientY });
+});
+render.canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  Mouse.setPosition(mouse, { x: touch.clientX, y: touch.clientY });
+});
+render.canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  // Optional: clear mouse position or leave as is
+});
+
 Events.on(mouseConstraint, "enddrag", (event) => {
   if (event.body === ball) {
     setTimeout(() => {
@@ -207,7 +223,9 @@ Events.on(engine, 'collisionStart', event => {
       if (blocks.includes(body)) {
         let otherBody = (body === bodyA) ? bodyB : bodyA;
         if (balls.includes(otherBody)) {
-          body.isHit = true;
+          if (!body.isHit) {
+            body.isHit = true;
+          }
         }
       }
     });
@@ -228,7 +246,7 @@ Events.on(render, 'beforeRender', () => {
         messageOverlay.classList.remove('visible');
         currentLevel++;
         if (!levels[currentLevel]) {
-          showMessage('You Won! Click Anywhere to Restart');
+          showMessage('You Won! 🎉 Click to Restart');
           messageOverlay.addEventListener('click', restartGame, { once: true });
         } else {
           setup();

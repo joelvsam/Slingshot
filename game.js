@@ -64,6 +64,36 @@ const levels = {
       }
       return newBlocks;
     }
+  },
+  3: {
+    createBlocks: () => {
+      const newBlocks = [];
+      const cols = 4, rows = 4;
+      const startX = window.innerWidth * 0.7;
+      const startY = window.innerHeight - 120;
+      for(let y = 0; y < rows; y++) {
+        for(let x = 0; x < cols; x++) {
+          newBlocks.push(createBlock(startX + x * 40, startY - y * 40));
+        }
+      }
+      return newBlocks;
+    }
+  },
+  4: {
+    createBlocks: () => {
+      const newBlocks = [];
+      const positions = [
+        [0, 0], [1, 0], [2, 0],
+                [1, 1],
+               [0.5, 2], [1.5, 2]
+      ];
+      const baseX = window.innerWidth * 0.7;
+      const baseY = window.innerHeight - 100;
+      positions.forEach(([x, y]) => {
+        newBlocks.push(createBlock(baseX + x * 40, baseY - y * 40));
+      });
+      return newBlocks;
+    }
   }
 };
 
@@ -145,19 +175,25 @@ function createSling(ballBody) {
 }
 
 function showMessage(msg) {
-  messageOverlay.textContent = msg;
+  messageOverlay.innerHTML = msg;
   messageOverlay.classList.add('visible');
 }
 
 function hideMessage() {
   messageOverlay.classList.remove('visible');
   messageOverlay.removeEventListener('click', restartGame);
+  messageOverlay.removeEventListener('click', startGameAfterInstructions);
 }
 
 function restartGame() {
   currentLevel = 1;
   setup();
   hideMessage();
+}
+
+function startGameAfterInstructions() {
+  hideMessage();
+  Runner.run(runner, engine);
 }
 
 function setup() {
@@ -170,6 +206,15 @@ function setup() {
   balls = [];
   ball = createBall();
   createSling(ball);
+
+  // Show instructions before first play
+  if (currentLevel === 1 && balls.length === 1) {
+    showMessage(
+      ' Drag and release the ball to launch it!<br> Press SPACE to shoot again.<br><br> Click to Start'
+    );
+    messageOverlay.addEventListener('click', startGameAfterInstructions, { once: true });
+    Runner.stop(runner);
+  }
 }
 
 setup();
@@ -185,7 +230,6 @@ const mouseConstraint = MouseConstraint.create(engine, {
 World.add(world, mouseConstraint);
 render.mouse = mouse;
 
-// TOUCH SUPPORT
 render.canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   const touch = e.touches[0];
@@ -198,7 +242,6 @@ render.canvas.addEventListener('touchmove', e => {
 });
 render.canvas.addEventListener('touchend', e => {
   e.preventDefault();
-  // Optional: clear mouse position or leave as is
 });
 
 Events.on(mouseConstraint, "enddrag", (event) => {
@@ -246,7 +289,7 @@ Events.on(render, 'beforeRender', () => {
         messageOverlay.classList.remove('visible');
         currentLevel++;
         if (!levels[currentLevel]) {
-          showMessage('You Won! 🎉 Click to Restart');
+          showMessage('🎉 You Won!<br>Click to Restart');
           messageOverlay.addEventListener('click', restartGame, { once: true });
         } else {
           setup();

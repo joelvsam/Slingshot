@@ -1,4 +1,4 @@
-# 🎯 Slingshot Game (Powered by Matter.js)
+# Slingshot Game
 
 A physics-based slingshot game built using [Matter.js](https://brm.io/matter-js/). Inspired by Angry Birds.
 
